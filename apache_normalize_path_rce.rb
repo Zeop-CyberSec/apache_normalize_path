@@ -108,7 +108,7 @@ class MetasploitModule < Msf::Exploit::Remote
   def exploit
     @proto = (ssl ? 'https' : 'http')
 
-    if (!check.eql? Exploit::CheckCode::Vulnerable) && (!datastore['ForceExploit'])
+    if (!check.eql? Exploit::CheckCode::Vulnerable) && !datastore['ForceExploit']
       fail_with(Failure::NotVulnerable, 'The target is not exploitable.')
     end
 
