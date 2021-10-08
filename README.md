@@ -1,4 +1,4 @@
-# CVE-2021-41773: Path Traversal Zero-Day in Apache HTTP Server Exploited
+# CVE-2021-41773|CVE-2021-42013: Path Traversal Zero-Day in Apache HTTP Server Exploited
 
 On October 5, the Apache HTTP Server Project patched CVE-2021-41773, a path traversal and file disclosure vulnerability in Apache HTTP Server, an open-source web server for Unix and Windows that is among the most widely used web servers. According to the security advisory, CVE-2021-41773 has been exploited in the wild as a zero-day. The vulnerability was disclosed to the Apache HTTP Server Project on September 29 by Ash Daulton and the cPanel Security Team. However, the advisory does not indicate when exploitation of CVE-2021-41773 was detected, but it stands to reason that the exploitation drove the expedited release of a patch.
 
@@ -10,6 +10,28 @@ It was found that the fix for CVE-2021-41773 in Apache HTTP Server 2.4.50 was in
 
 ## Make your lab
 
+#### Path Traversal
+
+```
+docker run -dit --name CVE-2021-41773 -p 8080:80 -v /opt/apache2.4.49:/usr/local/apache2/htdocs httpd:2.4.49
+docker exec -it CVE-2021-41773 sed -i "0,/denied/s/AllowOverride none/# AllowOverride None/" conf/httpd.conf
+docker exec -it CVE-2021-41773 sed -i "0,/denied/s/denied/granted/" conf/httpd.conf
+docker stop CVE-2021-41773
+docker start CVE-2021-41773
+```
+
+--or--
+
+```
+docker run -dit --name CVE-2021-42013 -p 8080:80 -v /opt/apache2.4.50:/usr/local/apache2/htdocs httpd:2.4.50
+docker exec -it CVE-2021-42013 sed -i "0,/denied/s/AllowOverride none/# AllowOverride None/" conf/httpd.conf
+docker exec -it CVE-2021-42013 sed -i "0,/denied/s/denied/granted/" conf/httpd.conf
+docker stop CVE-2021-42013
+docker start CVE-2021-42013
+```
+
+#### Remote Code Execution
+
 ```
 docker run -dit --name CVE-2021-41773 -p 8080:80 -v /opt/apache2.4.49:/usr/local/apache2/htdocs httpd:2.4.49
 docker exec -it CVE-2021-41773 sed -i "0,/denied/s/AllowOverride none/# AllowOverride None/" conf/httpd.conf
@@ -17,6 +39,17 @@ docker exec -it CVE-2021-41773 sed -i "0,/denied/s/denied/granted/" conf/httpd.c
 docker exec -it CVE-2021-41773 sed -i -E "s|all denied|all granted|g; s|#(.* cgid_.*)|\1|g" conf/httpd.conf
 docker stop CVE-2021-41773
 docker start CVE-2021-41773
+```
+
+--or--
+
+```
+docker run -dit --name CVE-2021-42013 -p 8080:80 -v /opt/apache2.4.50:/usr/local/apache2/htdocs httpd:2.4.50
+docker exec -it CVE-2021-42013 sed -i "0,/denied/s/AllowOverride none/# AllowOverride None/" conf/httpd.conf
+docker exec -it CVE-2021-42013 sed -i "0,/denied/s/denied/granted/" conf/httpd.conf
+docker exec -it CVE-2021-42013 sed -i -E "s|all denied|all granted|g; s|#(.* cgid_.*)|\1|g" conf/httpd.conf
+docker stop CVE-2021-42013
+docker start CVE-2021-42013
 ```
 
 ## Verification
