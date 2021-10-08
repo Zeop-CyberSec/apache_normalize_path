@@ -26,7 +26,10 @@ class MetasploitModule < Msf::Exploit::Remote
           ['CVE', '2021-41773'],
           ['CVE', '2021-42013'],
           ['URL', 'https://httpd.apache.org/security/vulnerabilities_24.html'],
-          ['URL', 'https://github.com/RootUp/PersonalStuff/blob/master/http-vuln-cve-2021-41773.nse']
+          ['URL', 'https://github.com/RootUp/PersonalStuff/blob/master/http-vuln-cve-2021-41773.nse'],
+          ['URL', 'https://github.com/projectdiscovery/nuclei-templates/blob/master/vulnerabilities/apache/apache-httpd-rce.yaml'],
+          ['URL', 'https://github.com/projectdiscovery/nuclei-templates/commit/9384dd235ec5107f423d930ac80055f2ce2bff74'],
+          ['URL', 'https://attackerkb.com/topics/1RltOPCYqE/cve-2021-41773/rapid7-analysis']
         ],
         'Author' => [
           'Ash Daulton', # Vulnerability discovery
