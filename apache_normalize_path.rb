@@ -60,7 +60,7 @@ class MetasploitModule < Msf::Auxiliary
           [
             'READ_FILE',
             {
-              'Description' => 'Read file on the remote server.',
+              'Description' => 'Read file on the remote server.'
             }
           ]
         ],
